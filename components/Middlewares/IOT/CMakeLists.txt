@@ -9,6 +9,6 @@ endif()
 
 idf_component_register(SRCS "onenet_control.c" "onenet_mqtt.c" "onenet_ota.c" "onenet_token.c" "wifi_manager.c"
                     INCLUDE_DIRS "."
-                    REQUIRES app_update esp_driver_ledc esp_event esp_netif esp_wifi json mbedtls mqtt nvs_flash XL9555 LED)
+                    REQUIRES app_update esp_driver_ledc esp_event esp_http_client esp_netif esp_wifi json mbedtls mqtt nvs_flash XL9555 LED)
 
 

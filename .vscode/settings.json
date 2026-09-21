@@ -12,7 +12,7 @@
   "clangd.arguments": [
     "--background-index",
     "--query-driver=**",
-    "--compile-commands-dir=c:\\Users\\PC\\Desktop\\my-ESP32_project\\08_onenet\\build"
+    "--compile-commands-dir=${workspaceFolder}/build"
   ],
   "idf.flashType": "UART",
   "idf.portWin": "COM3"

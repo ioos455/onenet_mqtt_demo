@@ -16,6 +16,8 @@ static char topic[128];                                 /* topic数组 */
 
 //下行响应函数
 static void onenet_porprety_ack(const char* id, int code, const char* msg);
+//OTA响应函数
+static void onenet_ota_ack(const char* id, int code, const char* msg);
 //订阅主题
 static void onenet_subscribe(void);
 //上传数据
@@ -77,6 +79,17 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             onenet_porprety_ack(cJSON_GetStringValue(id_js), 200, "property success!!!");
             //释放节点
             cJSON_Delete(property_js);
+        }
+        else if(strstr(event->topic, "/ota/inform"))
+        {
+            cJSON* ota_js = cJSON_Parse(event->data);
+            //OTA响应
+            cJSON* id_js = cJSON_GetObjectItem(ota_js, "id");/* 响应id要和该下行id保持一致 */
+            onenet_ota_ack(cJSON_GetStringValue(id_js), 200, "property success!!!");
+            //释放节点
+            cJSON_Delete(ota_js);
+
+            //开始OTA升级流程
         }
         break;
     case MQTT_EVENT_ERROR:
@@ -144,6 +157,38 @@ static void onenet_porprety_ack(const char* id, int code, const char* msg)
     cJSON_Delete(relay_js);
 }
 
+/*响应topic: $sys/{pid}/{device-name}/ota/inform_reply
+OneJSON数据格式:
+
+{
+    "id":"123",
+    "code":200,
+    "msg":"xxxx"
+    "data":{
+        “Xxxx”
+    }
+}
+    OTA响应函数
+*/
+static void onenet_ota_ack(const char* id, int code, const char* msg)
+{
+    //向topic_porperty_ack写入响应topic
+    snprintf(topic, sizeof(topic), "$sys/%s/%s/ota/inform_reply", ONENET_PRODUCT_ID, ONENET_DEVICE_NAME);
+    //解析JSON
+    cJSON* relay_js = cJSON_CreateObject();
+    cJSON_AddStringToObject(relay_js, "id", id);
+    cJSON_AddNumberToObject(relay_js, "code", code);
+    cJSON_AddStringToObject(relay_js, "msg", msg);
+    //简化json格式
+    char* data = cJSON_PrintUnformatted(relay_js);
+    //上传json
+    esp_mqtt_client_publish(mqtt_handler, topic, data, strlen(data), 1, 0);
+    //释放内存
+    cJSON_free(data);
+    //删除节点
+    cJSON_Delete(relay_js);
+}
+
 //订阅主题
 static void onenet_subscribe(void)
 {
@@ -152,6 +197,9 @@ static void onenet_subscribe(void)
     esp_mqtt_client_subscribe_single(mqtt_handler, topic, 1);
     //订阅下行主题
     snprintf(topic, sizeof(topic), "$sys/%s/%s/thing/property/set", ONENET_PRODUCT_ID, ONENET_DEVICE_NAME);
+    esp_mqtt_client_subscribe_single(mqtt_handler, topic, 1);
+    //订阅OTA主题
+    snprintf(topic, sizeof(topic), "$sys/%s/%s/ota/inform", ONENET_PRODUCT_ID, ONENET_DEVICE_NAME);
     esp_mqtt_client_subscribe_single(mqtt_handler, topic, 1);
 }
 

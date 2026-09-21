@@ -99,7 +99,7 @@
 ## 目录结构
 
 ```
-08_onenet/
+onenet_mqtt_demo/
 ├── CMakeLists.txt                  # 顶层工程配置，注册 BSP / Middlewares 组件目录
 ├── sdkconfig                       # 工程配置（已被 .gitignore 忽略）
 ├── .gitignore
